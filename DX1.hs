@@ -16,9 +16,11 @@ module DX1
 
 import Control.Applicative
 import Control.Lens
+import Control.Monad ((>=>))
 import Data.Function (on)
 import Data.List (intersperse, sortBy)
-import Text.ParserCombinators.Parsec hiding ((<|>), many, count)
+import System.Environment
+import Text.ParserCombinators.Parsec hiding ((<|>), many, count, optional)
 import Text.Parsec.Prim (ParsecT)
 import Prelude hiding (words)
 
@@ -97,7 +99,7 @@ dx1Entry = pure DX1Entry
   <*> words  <* eol
                         
 -- | Matches many 'DX1Entry's.
-dx1File = many dx1Entry
+dx1File = many dx1Entry <* eof
 
 -- | Parses a @.dx1@ file to a list of 'DX1Entry's (uses 'Parsec' internally).
 parseDX1 :: String -> Either ParseError [DX1Entry]
@@ -107,19 +109,21 @@ parseDX1 = parse dx1File "(unknown)"
 word = many1 $ noneOf " \n\r"
 
 -- | Matches a space-separated list of words.
-words = many $ word <* space
+--words = manyTill (word <* optional space) done
+words = word `sepBy1` oneOf " "
+{-  where
+    done = choice [eol >> return (), eof]-}
 
 -- | Matches an integer.
 digits = pure read <*> many1 digit
 
 -- | Matches either a space or a tab.
-sep = try space <|> tab
+sep = oneOf " \t"
 
 -- | Matches both @DOS@- and @UNIX@-style newlines.
 eol = try (string "\r\n")
    <|> string "\n"
    <|> string "\r"
-   <?> "end of line"
 
 
 {- Example Program -}
@@ -129,9 +133,13 @@ eol = try (string "\r\n")
 -- and prints the result.
 main :: IO ()
 main = do
-  file <- getContents
-  case parseDX1 file of
-    Left  e -> putStrLn "Error parsing input:" >> print e
-    Right r -> mapM_ (\(d, f) ->
-        putStrLn $ (d ^. name) ++ ' ' : show f
-      ) $ sortedFrequencies r
+  args <- getArgs
+  case args of
+    [] -> getContents >>= parseDX1M
+    paths -> mapM_ (readFile >=> parseDX1M) paths
+
+parseDX1M file = case parseDX1 file of
+  Left  e -> putStrLn "Error parsing input:" >> print e
+  Right r -> mapM_ (\(d, f) ->
+      putStrLn $ (d ^. name) ++ ' ' : show f
+    ) $ sortedFrequencies r
