@@ -109,10 +109,7 @@ parseDX1 = parse dx1File "(unknown)"
 word = many1 $ noneOf " \n\r"
 
 -- | Matches a space-separated list of words.
---words = manyTill (word <* optional space) done
 words = word `sepBy1` oneOf " "
-{-  where
-    done = choice [eol >> return (), eof]-}
 
 -- | Matches an integer.
 digits = pure read <*> many1 digit
