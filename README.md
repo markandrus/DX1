@@ -26,9 +26,9 @@ Stores a word, its number of occurrences, and its phonemes.
 
 #### Instances
 
-* Eq [DX1Entry](DX1.html#t:DX1Entry)
-* Read [DX1Entry](DX1.html#t:DX1Entry)
-* Show [DX1Entry](DX1.html#t:DX1Entry)
+* Eq DX1Entry
+* Read DX1Entry
+* Show DX1Entry
 
 Calculations
 ------------
