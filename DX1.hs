@@ -41,7 +41,7 @@ import Prelude hiding (words)
 
 {- Datatype -}
 
--- | Encodes a word, its number of occurrences, and its phonemes.
+-- | Stores a word, its number of occurrences, and its phonemes.
 data DX1Entry = DX1Entry
   { _name     :: String
   , _count    :: Int
@@ -124,9 +124,9 @@ eol = try (string "\r\n")
 
 {- Example Program -}
 
--- | /O(nlog n)/. Parse a @.dx1@ file from @stdin@ or a given filename, computes
--- the frequency of each word, sorts by frequency in ascending order, and prints
--- the result.
+-- | /O(nlog n)/. Parses a @.dx1@ file from @stdin@ or a given filename,
+-- computes the frequency of each word, sorts by frequency in ascending order,
+-- and prints the result.
 main :: IO ()
 main = do
   file <- getContents
