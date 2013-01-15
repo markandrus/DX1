@@ -16,7 +16,7 @@ module DX1
 
 import Control.Applicative
 import Control.Lens
-import Control.Monad ((>=>))
+import Control.Monad ((>=>), forM, liftM, join)
 import Data.Function (on)
 import Data.List (intersperse, sortBy)
 import System.Environment
@@ -99,17 +99,17 @@ dx1Entry = pure DX1Entry
   <*> words  <* eol
                         
 -- | Matches many 'DX1Entry's.
-dx1File = many dx1Entry <* eof
+dx1File = dx1Entry `manyTill` eof
 
 -- | Parses a @.dx1@ file to a list of 'DX1Entry's (uses 'Parsec' internally).
 parseDX1 :: String -> Either ParseError [DX1Entry]
-parseDX1 = parse dx1File "(unknown)"
+parseDX1 = parse dx1File ""
 
 -- | Matches a word.
 word = many1 $ noneOf " \n\r"
 
 -- | Matches a space-separated list of words.
-words = word `sepBy1` oneOf " "
+words = word `sepBy1` char ' '
 
 -- | Matches an integer.
 digits = pure read <*> many1 digit
@@ -132,11 +132,11 @@ main :: IO ()
 main = do
   args <- getArgs
   case args of
-    [] -> getContents >>= parseDX1M
-    paths -> mapM_ (readFile >=> parseDX1M) paths
+    [] -> (liftM parseDX1Freqs >=> mapM_ putStrLn) getContents
+    paths -> mapM_ ((liftM parseDX1Freqs >=> mapM_ putStrLn) . readFile) paths
 
-parseDX1M file = case parseDX1 file of
-  Left  e -> putStrLn "Error parsing input:" >> print e
-  Right r -> mapM_ (\(d, f) ->
-      putStrLn $ (d ^. name) ++ ' ' : show f
-    ) $ sortedFrequencies r
+parseDX1Freqs file = case parseDX1 file of
+  Left  e -> return $ "Error parsing input: " ++ show e
+  Right r -> join
+           . forM (sortedFrequencies r) $ \(d, f) ->
+               return $ (d ^. name) ++ " " ++ show f
