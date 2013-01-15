@@ -112,7 +112,7 @@ word = many1 $ noneOf " \n\r"
 words = word `sepBy1` char ' '
 
 -- | Matches an integer.
-digits = pure read <*> many1 digit
+digits = read <$> many1 digit
 
 -- | Matches either a space or a tab.
 sep = oneOf " \t"
